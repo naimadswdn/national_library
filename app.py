@@ -2,6 +2,7 @@ import requests
 import sys
 import json
 import argparse
+import shelve
 
 
 def parse_arguments():
@@ -27,6 +28,7 @@ author: <author>
 gentre: <gentre> 
 publicationYear: <publicationYear> 
 isbnIssn: <isbnIssn>
+id: <id>
 
 Example: 
 
@@ -35,6 +37,7 @@ author: Sienkiewicz, Henryk (1846-1916)
 genre: Powieść polska
 publicationYear: 1995
 isbnIssn: 8370490239 8370490468
+id: 1006077
         """
     parser = argparse.ArgumentParser(usage=usage)
     parser.add_argument('author', type=str, help="In following format: Brandon,Sanders <- only coma separated.")
@@ -70,7 +73,7 @@ def lookup_for_books(author, **kwargs):
 
 
 def show_results(bibs):
-    showed_elements = ['title', 'author', 'genre', 'publicationYear', 'isbnIssn']
+    showed_elements = ['title', 'author', 'genre', 'publicationYear', 'isbnIssn', 'id']
 
     for book in bibs:
         for element in showed_elements:
@@ -78,8 +81,41 @@ def show_results(bibs):
         print('')
 
 
-if __name__ == "__main__":
-    arguments = parse_arguments()
-    books = lookup_for_books(**vars(arguments))
-    show_results(books)
+def add_to_shelve(author, book_id):
+    shelf_file = shelve.open('my_library')
+    bibs = lookup_for_books(author, id=book_id)
+    if not bibs:
+        print('Ups! Book you are looking for do not exist. Did you provide correct author and id?')
+    for book in bibs:
+        shelf_file[book['title']] = book
+        print(f'{book["title"]} has been successfully added to your library file!')
+        shelf_file.close()
 
+
+def show_library_content():
+    shelf_file = shelve.open('my_library')
+    key_list = list(shelf_file.keys())
+    for key in key_list:
+        print(f'{key}: {shelf_file[key]}')
+
+    books_count = len(key_list)
+    print(f'\nTotal amount of books in your library: {books_count}')
+
+
+def dispatcher():
+    if sys.argv[1] == 'search':
+        del sys.argv[1]
+        arguments = parse_arguments()
+        books = lookup_for_books(**vars(arguments))
+        show_results(books)
+    elif sys.argv[1] == 'add':
+        del sys.argv[1]
+        author = sys.argv[1]
+        book_id = sys.argv[2]
+        add_to_shelve(author, book_id)
+    elif sys.argv[1] == 'show':
+        show_library_content()
+
+
+if __name__ == "__main__":
+    dispatcher()
