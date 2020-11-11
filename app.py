@@ -55,20 +55,18 @@ def lookup_for_books(author, **kwargs):
     url = base_url + f'author={author}'
 
     # build url with optional arguments
-    print(kwargs)
     for k, v in kwargs.items():
-        print(f'{k}: {v}')
         url += f'&{k}={v}'
 
-    print(url)
-
-    result = requests.get(url)
-    result.raise_for_status()
-    result = json.loads(result.text)
-
-    bibs = result['bibs']
-
-    return bibs
+    try:
+        result = requests.get(url)
+        result.raise_for_status()
+        result = json.loads(result.text)
+        bibs = result['bibs']
+        return bibs
+    except requests.exceptions.ConnectionError as erce:
+        print(f'Ups! Something goes wrong: \n {erce}')
+        exit(1)
 
 
 def show_results(bibs):
@@ -82,6 +80,6 @@ def show_results(bibs):
 
 if __name__ == "__main__":
     arguments = parse_arguments()
-    result = lookup_for_books(**vars(arguments))
-    show_results(result)
+    books = lookup_for_books(**vars(arguments))
+    show_results(books)
 
