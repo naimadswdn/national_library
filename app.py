@@ -95,7 +95,7 @@ def show_library_content():
     shelf_file = shelve.open('my_library')
     key_list = list(shelf_file.keys())
     for key in key_list:
-        print(f'{key}: {shelf_file[key]}')
+        print(f'{key}, {shelf_file[key]["author"]}, ISBN: {shelf_file[key]["isbnIssn"]}, ID: {shelf_file[key]["id"]}')
 
     books_count = len(key_list)
     print(f'\nTotal amount of books in your library: {books_count}')
