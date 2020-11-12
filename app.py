@@ -3,9 +3,10 @@ import sys
 import json
 import argparse
 import shelve
+from typing import Dict
 
 
-def parse_arguments_search():
+def parse_arguments_search() -> argparse.Namespace:
     usage_search = """
     Simple app to search for a books under Polish National library.
     The only required argument is an author.
@@ -52,7 +53,7 @@ def parse_arguments_search():
     return args
 
 
-def lookup_for_books(author, **kwargs):
+def lookup_for_books(author: str, **kwargs) -> Dict:
     base_url = 'https://data.bn.org.pl/api/bibs.json?'
     url = base_url + f'author={author}'
 
@@ -71,7 +72,7 @@ def lookup_for_books(author, **kwargs):
         exit(1)
 
 
-def show_results(bibs):
+def show_results(bibs: Dict) -> None:
     showed_elements = ['title', 'author', 'genre', 'publicationYear', 'isbnIssn', 'id']
 
     for book in bibs:
@@ -80,7 +81,7 @@ def show_results(bibs):
         print('')
 
 
-def add_to_shelve(author, book_id):
+def add_to_shelve(author: str, book_id: int) -> None:
     shelf_file = shelve.open('my_library')
     bibs = lookup_for_books(author, id=book_id)
     if not bibs:
@@ -91,7 +92,7 @@ def add_to_shelve(author, book_id):
         shelf_file.close()
 
 
-def show_library_content():
+def show_library_content() -> None:
     shelf_file = shelve.open('my_library')
     key_list = list(shelf_file.keys())
     for key in key_list:
@@ -101,7 +102,7 @@ def show_library_content():
     print(f'\nTotal amount of books in your library: {books_count}')
 
 
-def dispatcher():
+def dispatcher() -> None:
     usage = """
     app.py <action> ... 
 
@@ -132,12 +133,16 @@ For more information about app.py search usage, please run:
     elif args.action == 'add':
         del sys.argv[1]
         author = sys.argv[1]
-        book_id = sys.argv[2]
+        book_id = int(sys.argv[2])
         add_to_shelve(author, book_id)
     elif args.action == 'show':
+        if len(sys.argv) > 2:
+            print('*' * 30, '\nYou have provided additional argument for show command. This is not supported.\n'
+                            'See app.py --help for more.\n'
+                            'Argument ignored.\n', '*' * 30, '\n')
         show_library_content()
     else:
-        print('Wrong argument! Please run app.py --help for correct usage information. ')
+        print(f'Wrong argument! Correct usage:\n{usage}')
 
 
 if __name__ == "__main__":
